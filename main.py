@@ -58,26 +58,32 @@ driver_id_to_name = {info[3]: name for name, info in drivers.items()}
 sorted_passengers = dict(sorted(passengers.items(), key=lambda item: item[1][3], reverse=True))
 
 num_drivers = len(drivers)
-num_riders = num_drivers * 4
+num_riders = min(len(sorted_passengers), num_drivers * 4)
 
-# Remove riders that can't fit
-kept_passengers = sorted_passengers[:num_riders]
-removed_passengers = sorted_passengers[num_riders:]
+count = 0
+kept_passengers = {}
+bus_riders = []
+for key in sorted_passengers:
+    if count < num_riders:
+        kept_passengers[key] = sorted_passengers[key]
+    else:
+        bus_riders.append(key)
+    count += 1
 
 passengers = dict(kept_passengers)
-bus_riders = []
 
-# Makes array of people riding the bus
-for tuple in removed_passengers:
-    bus_riders.append(tuple[0])
-# Fix the indexes for the passengers
+# Fix the indices for the passengers
 passenger_idx = 0
 for key, value in passengers.items():
     passengers[key][2] = passenger_idx
     passenger_idx += 1
 
-print("Drivers:", drivers)
-print("Passengers:", passengers)
+print("Drivers:")
+for key in drivers:
+    print(key)
+print("Passengers after filter:")
+for key in passengers:
+    print(key)
 
 # Reverse mapping to find passenger name from ID
 passenger_id_to_name = {info[2]: name for name, info in passengers.items()}
@@ -108,8 +114,6 @@ for i in range(num_riders):
 
 # Sort matrix by row with lowest distance
 riders_matrix.sort()
-        
-print("adjMatrix:", riders_matrix)
 
 group_assigned = {} # key: passenger index, val: group index
 people_in_group = {} # key: group index, val: num people in group (4 means full)
@@ -117,7 +121,7 @@ num_groups_assigned = 0
 
 for i in range(num_riders):
     # ignore when first rider has been assigned a group
-    pass_index_1 = riders_matrix[-1]
+    pass_index_1 = riders_matrix[i][-1]
     if pass_index_1 in group_assigned:
         continue
     curr_index = -1
@@ -167,12 +171,12 @@ for i in range(num_drivers):
 drivers_matrix.sort()
 
 assigned_driver = set() # keeps track of whos in a car
-cars = [] # keeps track of final car assignments
+cars = [0 for i in range(num_drivers)] # keeps track of final car assignments
 
 # Assign drivers to groups
 for row in range(num_drivers):
-    driver_index = drivers_matrix[-1]
-    cars.append([driver_index])
+    driver_index = drivers_matrix[row][-1]
+    cars[row] = [driver_index]
     for col in range(num_riders):
         rider_index = drivers_matrix[row][col][1]
         if rider_index not in assigned_driver:
@@ -182,6 +186,24 @@ for row in range(num_drivers):
         cars[row].append(person)
         assigned_driver.add(person)
 
+print(cars)
+
+print("Riders Matrix")
+for row in riders_matrix:
+    print()
+    print(passenger_id_to_name[row[-1]])
+    for j in range(num_riders):
+        print(passenger_id_to_name[row[j][1]], row[j][0])
+    print()
+
+print("Drivers Matrix")
+for row in drivers_matrix:
+    print()
+    print(driver_id_to_name[row[-1]])
+    for j in range(num_riders):
+        print(passenger_id_to_name[row[j][1]], row[j][0])
+    print()
+    
 # Print out each car
 for i in range(num_drivers):
     print("Car", i + 1)
@@ -192,3 +214,8 @@ for i in range(num_drivers):
         else:
             print(passenger_id_to_name[cars[i][j]])
     print()
+
+# Print bus riders
+print("Bus riders")
+for person in bus_riders:
+    print(person)
